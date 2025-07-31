@@ -55,6 +55,6 @@ def main():
         print("No ingredients entered.")
     print("👋 Done!")
 
-
-main()
+if __name__ == "__main__":
+    main()
 
