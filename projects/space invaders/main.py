@@ -43,25 +43,29 @@ class Player:
 
 
 class Invader:
-    def __init__(self):
+    def __init__(self, base_speed = 0.2):
         self.image = pygame.image.load('invader1.png')
         self.x = random.randint(0, 736)
         self.y = random.randint(50, 150)
-        self.change_x = 0.2
+        self.base_speed =base_speed
+        self.change_x = base_speed
         self.change_y = 40
 
     def update(self):
         self.x += self.change_x
         if self.x <= 0:
-            self.change_x = 0.2
-            self.y += self.change_y
+            self.change_x = abs(self.base_speed)
+            self.y += abs(self.change_y)
         elif self.x >= 736:
-            self.change_x = -0.2
+            self.change_x = -abs(self.base_speed)
             self.y += self.change_y
 
-    def respawn(self):
+    def respawn(self, new_speed = None):
         self.x = random.randint(0, 736)
         self.y = random.randint(50, 150)
+        if new_speed is not None:
+            self.base_speed = new_speed
+            self.change_x = new_speed if self.change_x > 0 else -new_speed
 
     def draw(self, surface):
         surface.blit(self.image, (self.x, self.y))
@@ -109,14 +113,21 @@ class Game:
 
         self.player  = Player(370, 480)
         self.bullet = Bullet()
-        self.invaders = [Invader() for _ in range(6)]
+        self.invader_speed = 0.2
+        self.invaders = [Invader(self.invader_speed) for _ in range(6)]
         self.score = 0
+        self.level = 1
+        self.next_level = 30 
         self.running = True
 
     def show_score(self):
         score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
         self.screen.blit(score_text, (10, 10))
 
+    def show_level(self):   
+        level_text = self.font.render(f"Level: {self.level}", True, (255, 255, 255))
+        self.screen.blit(level_text,(650, 10))
+    
     def game_over(self):
         over_text = self.over_font.render("GAME OVER", True, (255, 255, 255))
         self.screen.blit(over_text, (200, 250))
@@ -150,7 +161,7 @@ class Game:
 
             for invader in self.invaders:
                 invader.update()
-                if invader.y > 200:
+                if invader.y > 420:
                     for enemy in self.invaders:
                         enemy.y = 2000
                     self.game_over()
@@ -158,12 +169,22 @@ class Game:
                 if self.check_collision(invader):
                     self.bullet.reset()
                     self.score += 1
-                    invader.respawn()
+                    invader.respawn(self.invader_speed)
                 invader.draw(self.screen)
+
+            if self.score >= self.next_level:
+                self.level += 1
+                self.next_level += 30
+                self.invader_speed += 0.1
+                for enemy in self.invaders:
+                    enemy.base_speed = self.invader_speed
+                    enemy.change_x = self.invader_speed if enemy.change_x > 0 else -self.invader_speed      
+              
 
             self.player.draw(self.screen)
             self.bullet.draw(self.screen)
             self.show_score()
+            self.show_level()
             pygame.display.update()
 
 if __name__ == "__main__":
