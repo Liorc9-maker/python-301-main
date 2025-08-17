@@ -162,7 +162,13 @@ class Game:
         pause_text = self.title_font.render("PAUSED", True, (255, 255, 0))
         resume_text = self.font.render("Press P to resume", True, (255, 255, 255))
         self.screen.blit(pause_text, (300, 250))
-        self.screen.blit(resume_text, (260, 320))        
+        self.screen.blit(resume_text, (260, 320)) 
+
+    def show_quit_confirmation(self):
+        quit_text = self.title_font.render("Quit Game?", True, (255, 100, 100))
+        confirm_text = self.font.render("Press Y to quit or N to stay", True, (255, 255, 255))
+        self.screen.blit(quit_text, (250, 250))
+        self.screen.blit(confirm_text, (220, 320))           
 
     def check_collision(self, invader):
         distance = math.sqrt((invader.x - self.bullet.x) ** 2 + (invader.y - self.bullet.y) ** 2)
@@ -202,7 +208,18 @@ class Game:
                                 if event.key == pygame.K_SPACE and self.bullet.state == "ready":
                                     if self.sfx_enabled:
                                         self.sound.play_sound("laser.wav")
-                                    self.bullet.fire(self.player.x)                                
+                                    self.bullet.fire(self.player.x)
+
+                                if event.key == pygame.K_ESCAPE:
+                                    self.state = "CONFIRM_QUIT"
+                                    self.paused = True
+                            
+                    elif self.state == "CONFIRM_QUIT":  
+                        if event.key == pygame.K_y:
+                            self.running = False
+                        elif event.key in (pygame.K_n, pygame.K_ESCAPE):
+                            self.state = "PLAYING"
+                            self.paused = False                                       
 
                     elif self.state == "GAME_OVER":
                         if event.key == pygame.K_r:
@@ -220,6 +237,7 @@ class Game:
                 if not self.paused:                                   
                     self.player.update(delta_time)
                     self.bullet.update(delta_time)
+
 
                     for invader in self.invaders:
                         invader.update(delta_time)
@@ -253,9 +271,11 @@ class Game:
                 else:
                     self.show_paused()
 
+            elif self.state == "CONFIRM_QUIT":
+                self.show_quit_confirmation()
+
             elif self.state == "GAME_OVER":
                 self.game_over()
-
             pygame.display.update()
 
 if __name__ == "__main__":
